@@ -1,0 +1,59 @@
+---
+- hosts: nginx_servers
+  vars:
+    reactjs_host_ip: 192.168.10.26
+    reactjs_host_port: 80
+    project_path: "/etc/nginx/sites-enabled"
+    root_group: "root"
+  
+  tasks:
+  - name: Update APT package cache
+    apt:
+      update_cache: yes
+    become: yes
+  
+  - name: Install Nginx
+    apt:
+      name: nginx
+      state: present
+    become: yes
+    ignore_errors: yes
+  
+  - name: Copy nginx configuration in place
+    template:
+      src: nginx.conf.j2
+      dest: "{{ project_path }}/nginx.conf"
+      owner: "{{ root_group }}"
+      group: "{{ root_group }}"
+      mode: 0644
+    notify:
+      - reload nginx
+
+  pre_tasks:
+    - name: Ensure that the default nginx symlink is absent
+      file:
+        path: "/etc/nginx/sites-enabled/default"
+        state: absent
+      become: yes
+  
+  handlers:
+    - name: restart nginx
+      service:
+        name: nginx
+        state: restarted
+      become: yes
+      async: 200
+      poll: 0
+
+    - name: validate nginx configuration
+      command: nginx -t -c /etc/nginx/nginx.conf
+      changed_when: false
+      become: yes
+      ignore_errors: yes
+
+    - name: reload nginx
+      service:
+        name: nginx
+        state: reloaded
+      when: nginx_service_state == "started"
+      become: yes
