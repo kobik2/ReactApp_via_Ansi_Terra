@@ -1,9 +1,7 @@
 [nginx_servers]
-nginx_1 ansible_host=158.160.119.90 ansible_user=ubuntu ansible_ssh_private_key=~/.ssh/id_rsa
-nginx_2 ansible_host=158.160.125.15 ansible_user=ubuntu ansible_ssh_private_key=~/.ssh/id_rsa
+nginx_1 ansible_host=IP ansible_user=ubuntu ansible_ssh_private_key=~/.ssh/id_rsa
+nginx_2 ansible_host=IP ansible_user=ubuntu ansible_ssh_private_key=~/.ssh/id_rsa
 
 [reactjs_servers]
-reactjs_1 ansible_host=158.160.112.170 ansible_user=ubuntu ansible_ssh_private_key=~/.ssh/id_rsa
+reactjs_1 ansible_host=IP ansible_user=ubuntu ansible_ssh_private_key=~/.ssh/id_rsa
 
-[reactjs_servers:vars]
-key=value

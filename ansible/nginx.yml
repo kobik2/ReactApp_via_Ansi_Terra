@@ -1,8 +1,9 @@
 ---
 - hosts: nginx_servers
+  become: yes
   vars:
-    reactjs_host_ip: 192.168.10.26
-    reactjs_host_port: 80
+    reactjs_host_ip: #input your local IP
+    reactjs_host_port: #input EXPOSE port
     project_path: "/etc/nginx/sites-enabled"
     root_group: "root"
   
@@ -10,45 +11,44 @@
   - name: Update APT package cache
     apt:
       update_cache: yes
-    become: yes
   
   - name: Install Nginx
     apt:
       name: nginx
       state: present
-    become: yes
     ignore_errors: yes
   
-  - name: Copy nginx configuration in place
+  - name: Delete Nginx default
+    ansible.builtin.file:
+      state: absent
+      path: /etc/nginx/sites-enabled/default
+    notify: NGINX_reload
+
+  - name: Add Nginx config
     template:
       src: nginx.conf.j2
-      dest: "{{ project_path }}/nginx.conf"
-      owner: "{{ root_group }}"
-      group: "{{ root_group }}"
-      mode: 0644
-    notify:
-      - reload nginx
+      dest: "/etc/nginx/sites-enabled/nginx.conf"
+      owner: root
+      mode: '0644'
+    notify: NGINX_reload
 
   pre_tasks:
     - name: Ensure that the default nginx symlink is absent
       file:
         path: "/etc/nginx/sites-enabled/default"
         state: absent
-      become: yes
   
   handlers:
     - name: restart nginx
       service:
         name: nginx
         state: restarted
-      become: yes
       async: 200
       poll: 0
 
     - name: validate nginx configuration
       command: nginx -t -c /etc/nginx/nginx.conf
       changed_when: false
-      become: yes
       ignore_errors: yes
 
     - name: reload nginx
@@ -56,4 +56,3 @@
         name: nginx
         state: reloaded
       when: nginx_service_state == "started"
-      become: yes
